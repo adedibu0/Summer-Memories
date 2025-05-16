@@ -1,29 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { XIcon, BookOpenIcon, SaveIcon } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import type { MediaItem } from "@/lib/media"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  XIcon,
+  BookOpenIcon,
+  SaveIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import type { MediaItem } from "@/lib/media";
 
 interface MediaViewerProps {
-  item: MediaItem
-  userId: string
-  onClose: () => void
-  onUpdate: () => void
+  item: MediaItem;
+  userId: string;
+  onClose: () => void;
+  onUpdate: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+  showPrev?: boolean;
+  showNext?: boolean;
 }
 
-export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaViewerProps) {
-  const [journal, setJournal] = useState(item.journal || "")
-  const [isEditing, setIsEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const { toast } = useToast()
+export default function MediaViewer({
+  item,
+  userId,
+  onClose,
+  onUpdate,
+  onPrev,
+  onNext,
+  showPrev = false,
+  showNext = false,
+}: MediaViewerProps) {
+  const [journal, setJournal] = useState(item.journal || "");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleSaveJournal = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
 
     try {
       const response = await fetch(`/api/media/${item.id}?userId=${userId}`, {
@@ -34,29 +53,29 @@ export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaVi
         body: JSON.stringify({
           journal,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to update journal")
+        throw new Error("Failed to update journal");
       }
 
       toast({
         title: "Success",
         description: "Journal updated successfully",
-      })
+      });
 
-      setIsEditing(false)
-      onUpdate()
+      setIsEditing(false);
+      onUpdate();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to update journal",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -68,11 +87,20 @@ export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaVi
     >
       <motion.div
         layoutId={`media-${item.id}`}
-        className="bg-card rounded-lg shadow-lg w-full max-w-4xl overflow-hidden"
+        className="bg-card rounded-lg shadow-lg w-full max-w-4xl overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col md:flex-row h-full max-h-[80vh]">
-          <div className="flex-1 bg-black flex items-center justify-center">
+          <div className="flex-1 bg-black flex items-center justify-center relative">
+            {showPrev && (
+              <button
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/80 z-10"
+                onClick={onPrev}
+                aria-label="Previous"
+              >
+                <ArrowLeftIcon className="h-6 w-6" />
+              </button>
+            )}
             {item.type === "image" ? (
               <img
                 src={`/api/media/file/${item.id}?userId=${userId}`}
@@ -80,9 +108,25 @@ export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaVi
                 className="max-h-full max-w-full object-contain"
               />
             ) : (
-              <video controls autoPlay className="max-h-full max-w-full">
-                <source src={`/api/media/file/${item.id}?userId=${userId}`} type="video/mp4" />
+              <video
+                controls
+                autoPlay
+                className="max-h-full max-w-full object-contain"
+              >
+                <source
+                  src={`/api/media/file/${item.id}?userId=${userId}`}
+                  type="video/mp4"
+                />
               </video>
+            )}
+            {showNext && (
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/80 z-10"
+                onClick={onNext}
+                aria-label="Next"
+              >
+                <ArrowRightIcon className="h-6 w-6" />
+              </button>
             )}
           </div>
 
@@ -94,7 +138,9 @@ export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaVi
               </Button>
             </div>
 
-            {item.description && <p className="text-sm mb-4">{item.description}</p>}
+            {item.description && (
+              <p className="text-sm mb-4">{item.description}</p>
+            )}
 
             <div className="flex flex-wrap gap-2 mb-4">
               {item.categories.map((category) => (
@@ -126,14 +172,19 @@ export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaVi
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setJournal(item.journal || "")
-                      setIsEditing(false)
+                      setJournal(item.journal || "");
+                      setIsEditing(false);
                     }}
                     disabled={isSaving}
                   >
                     Cancel
                   </Button>
-                  <Button size="sm" onClick={handleSaveJournal} disabled={isSaving} className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    onClick={handleSaveJournal}
+                    disabled={isSaving}
+                    className="flex items-center gap-1"
+                  >
                     <SaveIcon className="h-3 w-3" />
                     {isSaving ? "Saving..." : "Save"}
                   </Button>
@@ -144,9 +195,15 @@ export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaVi
                 {item.journal ? (
                   <p className="text-sm mb-2">{item.journal}</p>
                 ) : (
-                  <p className="text-sm text-muted-foreground mb-2">No journal entry yet.</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    No journal entry yet.
+                  </p>
                 )}
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
                   {item.journal ? "Edit" : "Add"} Journal
                 </Button>
               </div>
@@ -155,5 +212,5 @@ export default function MediaViewer({ item, userId, onClose, onUpdate }: MediaVi
         </div>
       </motion.div>
     </motion.div>
-  )
+  );
 }

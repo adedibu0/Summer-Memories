@@ -24,6 +24,7 @@ import type { MediaItem } from "@/lib/media";
 import PexelsPicker from "@/components/PexelsPicker";
 import type { Category } from "@/lib/category";
 import { DEFAULT_CATEGORIES } from "@/lib/utils";
+import CategoryGrid from "@/components/category-grid";
 
 interface GalleryLayoutProps {
   userId: string;
@@ -202,6 +203,13 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
                 <BookOpenIcon className="h-4 w-4" />
                 <span>Journal</span>
               </TabsTrigger>
+              <TabsTrigger
+                value="categories"
+                className="flex items-center gap-2"
+              >
+                <FolderIcon className="h-4 w-4" />
+                <span>Categories</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -254,6 +262,16 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               showJournal
               categories={categories}
               // refreshCategories={fetchCategories}
+            />
+          </TabsContent>
+
+          <TabsContent value="categories" className="mt-0">
+            <CategoryGrid
+              mediaItems={mediaItems}
+              categories={categories}
+              isLoading={isLoading}
+              userId={userId}
+              onUpdate={fetchMediaItems}
             />
           </TabsContent>
         </Tabs>
