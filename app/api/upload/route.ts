@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     let aiLabels: string[] = [];
     let aiCaption = "";
 
-    const promptText = `Analyze this ${type} and provide a description and relevant categories from the following list: ${JSON.stringify(
+    const promptText = `Analyze this ${type} and provide a short description and relevant categories from the following list: ${JSON.stringify(
       DEFAULT_CATEGORIES
     )}. Please output the result as a JSON object with two keys: "description" (string) and "categories" (array of strings from the list provided). For example: { "description": "A photo of...", "categories": ["Nature", "Travel"] }. If no categories are relevant, the "categories" array should be empty.`;
 

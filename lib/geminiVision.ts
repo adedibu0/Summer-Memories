@@ -1,4 +1,10 @@
-import { GoogleGenAI, Part, createUserContent, Content } from "@google/genai";
+import {
+  GoogleGenAI,
+  Part,
+  createUserContent,
+  Content,
+  Type,
+} from "@google/genai";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_API_KEY) {
@@ -16,6 +22,24 @@ export async function analyzeMediaWithGemini(contents: Content) {
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash", // Using a multimodal model like gemini-2.0-flash or gemini-1.5-flash
       contents: contents,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            description: {
+              type: Type.STRING,
+            },
+            categories: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.STRING,
+              },
+            },
+          },
+          required: ["description", "categories"],
+        },
+      },
     });
 
     // The response text will contain the model's analysis of all images based on the prompt

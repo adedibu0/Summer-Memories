@@ -11,6 +11,7 @@ import {
   SaveIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
+  SparklesIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MediaItem } from "@/lib/media";
@@ -40,6 +41,8 @@ export default function MediaViewer({
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const [showAiOptions, setShowAiOptions] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
   const handleSaveJournal = async () => {
     setIsSaving(true);
@@ -75,6 +78,49 @@ export default function MediaViewer({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleAiSuggestion = async (type: "gps" | "mood" | "poetic") => {
+    setIsGeneratingAi(true);
+    setShowAiOptions(false); // Hide options after selection
+
+    // TODO: Implement backend API call to get AI suggestion
+    // This is a placeholder
+    let generatedText = "";
+    switch (type) {
+      case "gps":
+        // This requires backend implementation to extract and enrich GPS data
+        generatedText = "(GPS metadata suggestion - backend not implemented)";
+        toast({
+          title: "GPS Suggestion",
+          description: "Backend implementation for GPS metadata is missing.",
+          variant: "info",
+        });
+        break;
+      case "mood":
+        // Call backend to analyze mood using AI
+        generatedText = `(Mood suggestion for ${item.type} - backend not implemented)`;
+        toast({
+          title: "Mood Suggestion",
+          description: "Backend implementation for mood analysis is missing.",
+          variant: "info",
+        });
+        break;
+      case "poetic":
+        // Call backend to generate poetic caption using AI
+        generatedText = `(Poetic caption for ${item.type} - backend not implemented)`;
+        toast({
+          title: "Poetic Caption Suggestion",
+          description: "Backend implementation for poetic caption is missing.",
+          variant: "info",
+        });
+        break;
+    }
+
+    // Append generated text to the current journal content
+    setJournal((prev) => prev + (prev ? "\n\n" : "") + generatedText);
+
+    setIsGeneratingAi(false);
   };
 
   return (
@@ -188,6 +234,46 @@ export default function MediaViewer({
                     <SaveIcon className="h-3 w-3" />
                     {isSaving ? "Saving..." : "Save"}
                   </Button>
+                </div>
+
+                {/* AI Suggestion Button and Options */}
+                <div className="mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAiOptions(!showAiOptions)}
+                    disabled={isSaving || isGeneratingAi}
+                    className="flex items-center gap-1"
+                  >
+                    <SparklesIcon className="h-4 w-4" />✨ Generate with AI
+                  </Button>
+
+                  {showAiOptions && (
+                    <div className="mt-2 space-y-1 text-sm">
+                      <p className="font-medium">Suggestions:</p>
+                      <button
+                        className="text-blue-600 hover:underline disabled:text-gray-500 disabled:no-underline"
+                        onClick={() => handleAiSuggestion("gps")}
+                        disabled={isGeneratingAi}
+                      >
+                        - Extract GPS metadata and enrich
+                      </button>
+                      <button
+                        className="text-blue-600 hover:underline disabled:text-gray-500 disabled:no-underline"
+                        onClick={() => handleAiSuggestion("mood")}
+                        disabled={isGeneratingAi}
+                      >
+                        - Summarize the mood in this {item.type}
+                      </button>
+                      <button
+                        className="text-blue-600 hover:underline disabled:text-gray-500 disabled:no-underline"
+                        onClick={() => handleAiSuggestion("poetic")}
+                        disabled={isGeneratingAi}
+                      >
+                        - Generate a poetic caption
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (

@@ -1,62 +1,71 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { SparklesIcon, RefreshCwIcon } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SparklesIcon, RefreshCwIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AIRecommendationsProps {
-  userId: string
-  onGroupSelect: () => void
+  userId: string;
+  onGroupSelect: () => void;
 }
 
 interface GroupSuggestion {
-  name: string
-  items: string[]
+  name: string;
+  items: string[];
 }
 
-export default function AIRecommendations({ userId, onGroupSelect }: AIRecommendationsProps) {
-  const [suggestions, setSuggestions] = useState<GroupSuggestion[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const { toast } = useToast()
+export default function AIRecommendations({
+  userId,
+  onGroupSelect,
+}: AIRecommendationsProps) {
+  const [suggestions, setSuggestions] = useState<GroupSuggestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchSuggestions()
-  }, [])
+    fetchSuggestions();
+  }, []);
 
   const fetchSuggestions = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/ai/suggestions?userId=${userId}`)
+      const response = await fetch(`/api/ai/suggestions?userId=${userId}`);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch AI suggestions")
+        throw new Error("Failed to fetch AI suggestions");
       }
 
-      const data = await response.json()
-      setSuggestions(data)
+      const data = await response.json();
+      setSuggestions(data);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to load AI suggestions",
         variant: "destructive",
-      })
-      setSuggestions([])
+      });
+      setSuggestions([]);
     } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }
+  };
 
   const handleRefresh = () => {
-    setIsRefreshing(true)
-    fetchSuggestions()
-  }
+    setIsRefreshing(true);
+    fetchSuggestions();
+  };
 
   if (isLoading) {
     return (
@@ -66,7 +75,9 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
             <SparklesIcon className="h-5 w-5 text-primary" />
             <span>AI Recommendations</span>
           </CardTitle>
-          <CardDescription>Our AI analyzes your media to suggest meaningful groups</CardDescription>
+          <CardDescription>
+            Our AI analyzes your media to suggest meaningful groups
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -76,7 +87,7 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (suggestions.length === 0 && !isLoading) {
@@ -87,7 +98,9 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
             <SparklesIcon className="h-5 w-5 text-primary" />
             <span>AI Recommendations</span>
           </CardTitle>
-          <CardDescription>Our AI analyzes your media to suggest meaningful groups</CardDescription>
+          <CardDescription>
+            Our AI analyzes your media to suggest meaningful categories
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
@@ -106,7 +119,7 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -117,7 +130,9 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
             <SparklesIcon className="h-5 w-5 text-primary" />
             <span>AI Recommendations</span>
           </CardTitle>
-          <CardDescription>Our AI analyzes your media to suggest meaningful groups</CardDescription>
+          <CardDescription>
+            Our AI analyzes your media to suggest meaningful categories
+          </CardDescription>
         </div>
         <Button
           variant="outline"
@@ -144,7 +159,9 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
                 <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">{group.name}</CardTitle>
-                    <CardDescription>{group.items.length} items</CardDescription>
+                    <CardDescription>
+                      {group.items.length} items
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Button
@@ -156,8 +173,8 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
                         toast({
                           title: "Group Selected",
                           description: `Viewing "${group.name}" group`,
-                        })
-                        onGroupSelect()
+                        });
+                        onGroupSelect();
                       }}
                     >
                       View Group
@@ -170,5 +187,5 @@ export default function AIRecommendations({ userId, onGroupSelect }: AIRecommend
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
