@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
-  formatFileSize,
   isValidFileType,
   isValidFileSize,
   DEFAULT_CATEGORIES,
@@ -98,7 +97,7 @@ export default function MediaUploader({
         toast({
           title: "File too large",
           description: `${file.name} exceeds the ${
-            activeTab === "image" ? "2MB" : "10MB"
+            activeTab === "image" ? "2MB" : "15MB"
           } limit`,
           variant: "destructive",
         });
@@ -303,7 +302,7 @@ export default function MediaUploader({
         toast({
           title: "File too large",
           description: `${file.name} exceeds the ${
-            activeTab === "image" ? "2MB" : "10MB"
+            activeTab === "image" ? "2MB" : "15MB"
           } limit`,
           variant: "destructive",
         });
@@ -363,7 +362,7 @@ export default function MediaUploader({
               {selectedFiles.length === 0 ? (
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <UploadIcon className="mx-auto h-12 w-12 text-muted" />
-                  <p className="font-medium">Drag and drop files here</p>
+                  <p className="font-medium">Drag and drop a file here</p>
                   <p>or</p>
                   <Button
                     variant="outline"
@@ -400,6 +399,19 @@ export default function MediaUploader({
                 ></div>
               </div>
             )}
+
+            {/* Show analyzing state */}
+            {isUploading && (
+              <div className="flex flex-col items-center justify-center space-y-4 h-40 text-center">
+                <Loader2Icon className="h-12 w-12 animate-spin text-blue-600" />
+                <p className="text-lg font-semibold">
+                  Analyzing your {activeTab}...
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Please wait, this may take a moment.
+                </p>
+              </div>
+            )}
           </>
         )}
 
@@ -414,7 +426,10 @@ export default function MediaUploader({
               <div className="w-full max-h-60 overflow-hidden rounded-md bg-muted flex items-center justify-center">
                 {selectedFiles[0].type.startsWith("image/") ? (
                   <img
-                    src={URL.createObjectURL(selectedFiles[0])}
+                    src={
+                      URL.createObjectURL(selectedFiles[0]) ||
+                      "/placeholder.svg"
+                    }
                     alt="Preview"
                     className="max-h-60 object-contain"
                   />
@@ -509,7 +524,11 @@ export default function MediaUploader({
         </Button>
         {currentStep === "select_file" && (
           <Button
-            onClick={() => handleInitialUpload(selectedFiles[0])}
+            onClick={() => {
+              if (selectedFiles.length > 0) {
+                handleInitialUpload(selectedFiles[0]);
+              }
+            }}
             disabled={selectedFiles.length === 0 || isUploading || isSaving}
           >
             {isUploading ? (

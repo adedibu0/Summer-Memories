@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { saveMediaItem, getMediaItems } from "@/lib/media";
-import { analyzeImageWithGemini, bufferToBase64 } from "@/lib/geminiVision";
+import { analyzeMediaWithGemini, bufferToBase64 } from "@/lib/geminiVision";
 import { getImagePhash, hammingDistance } from "@/lib/perceptualHash";
+import { DEFAULT_CATEGORIES } from "@/lib/utils";
+import { createUserContent } from "@google/genai";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Read file as buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const imageBase64 = bufferToBase64(buffer);
+    const base64Data = bufferToBase64(buffer);
 
     // Duplicate detection for images
     let phash: string | undefined = undefined;
@@ -50,15 +52,69 @@ export async function POST(request: NextRequest) {
     // Call Gemini Vision for labels and caption
     let aiLabels: string[] = [];
     let aiCaption = "";
-    if (type === "image") {
-      try {
-        const aiResult = await analyzeImageWithGemini({ imageBase64 });
-        console.log("ai result", aiResult);
-        aiLabels = aiResult.labels || [];
-        aiCaption = aiResult.caption || "";
-      } catch (e) {
-        console.error("Gemini Vision error:", e);
+
+    const promptText = `Analyze this ${type} and provide a description and relevant categories from the following list: ${JSON.stringify(
+      DEFAULT_CATEGORIES
+    )}. Please output the result as a JSON object with two keys: "description" (string) and "categories" (array of strings from the list provided). For example: { "description": "A photo of...", "categories": ["Nature", "Travel"] }. If no categories are relevant, the "categories" array should be empty.`;
+
+    const mediaInputPart = {
+      inlineData: {
+        data: base64Data,
+        mimeType: file.type,
+      },
+    };
+
+    const contents = createUserContent([mediaInputPart, { text: promptText }]);
+
+    try {
+      const aiResultText = await analyzeMediaWithGemini(contents);
+      console.log("Gemini analysis result:", aiResultText);
+
+      // Attempt to parse the JSON response from Gemini
+      if (aiResultText) {
+        try {
+          // Clean the string by removing markdown code block formatting if present
+          let cleanResultText = aiResultText.trim();
+          if (cleanResultText.startsWith("```json")) {
+            cleanResultText = cleanResultText.substring("```json\n".length);
+          }
+          if (cleanResultText.endsWith("```")) {
+            cleanResultText = cleanResultText.substring(
+              0,
+              cleanResultText.length - "```".length
+            );
+          }
+
+          const resultJson = JSON.parse(cleanResultText);
+          if (resultJson && typeof resultJson === "object") {
+            if (typeof resultJson.description === "string") {
+              aiCaption = resultJson.description;
+            }
+            if (Array.isArray(resultJson.categories)) {
+              // Filter categories to ensure they are in DEFAULT_CATEGORIES and are strings
+              aiLabels = resultJson.categories.filter(
+                (category: string) =>
+                  typeof category === "string" &&
+                  DEFAULT_CATEGORIES.includes(category)
+              );
+            }
+          }
+        } catch (parseError) {
+          console.error("Failed to parse Gemini JSON response:", parseError);
+          // Fallback: if JSON parsing fails, treat the whole response as the caption
+          aiCaption = aiResultText;
+          aiLabels = []; // No labels if parsing fails
+        }
+      } else {
+        // Handle cases where aiResultText is null or undefined
+        aiCaption = "";
+        aiLabels = [];
       }
+    } catch (e) {
+      console.error("Gemini Vision error:", e);
+      // Set aiCaption and aiLabels to default values on error
+      aiCaption = "";
+      aiLabels = [];
     }
 
     return NextResponse.json(
