@@ -22,8 +22,8 @@ export function isValidFileType(file: File, type: "image" | "video"): boolean {
 
 export function isValidFileSize(file: File, type: "image" | "video"): boolean {
   if (type === "image") {
-    // 1MB limit for images
-    return file.size <= 1024 * 1024;
+    // 2MB limit for images
+    return file.size <= 1024 * 1024 * 2;
   } else if (type === "video") {
     // 10MB limit for videos (approx. 30 seconds)
     return file.size <= 10 * 1024 * 1024;

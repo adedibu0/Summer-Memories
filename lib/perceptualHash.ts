@@ -1,8 +1,48 @@
-import imghash from "imghash";
+import sharp from "sharp";
 
 export async function getImagePhash(buffer: Buffer): Promise<string> {
-  // imghash.hashRaw returns a promise with the hash string
-  return await imghash.hashRaw(buffer, 16, "hex"); // 16x16 hash, hex format
+  const size = 16; // Use a 16x16 grid for hashing
+  let data;
+
+  try {
+    // Resize, convert to grayscale, and get raw pixel data
+    data = await sharp(buffer)
+      .resize(size, size)
+      .grayscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+  } catch (error) {
+    console.error("Error processing image with sharp:", error);
+    throw new Error("Failed to process image for hashing");
+  }
+
+  const pixels = data.data;
+  const width = data.info.width;
+  const height = data.info.height;
+  const totalPixels = width * height;
+
+  // Calculate the average pixel value
+  let sum = 0;
+  for (let i = 0; i < pixels.length; i++) {
+    sum += pixels[i];
+  }
+  const average = sum / totalPixels;
+
+  // Create the hash based on pixel values relative to the average
+  let hash = "";
+  for (let i = 0; i < pixels.length; i++) {
+    hash += pixels[i] >= average ? "1" : "0";
+  }
+
+  // Convert binary hash to hexadecimal
+  // We'll process 4 bits (1 hex digit) at a time
+  let hexHash = "";
+  for (let i = 0; i < hash.length; i += 4) {
+    const nibble = hash.substr(i, 4);
+    hexHash += parseInt(nibble, 2).toString(16);
+  }
+
+  return hexHash;
 }
 
 // Helper to compute Hamming distance between two hex hashes

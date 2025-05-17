@@ -9,9 +9,6 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
     const userId = formData.get("userId") as string;
     const type = formData.get("type") as "image" | "video";
-    const categoriesJson = formData.get("categories") as string;
-    const description = formData.get("description") as string;
-
     if (!file || !userId || !type) {
       return NextResponse.json(
         { message: "Missing required fields" },
@@ -53,43 +50,26 @@ export async function POST(request: NextRequest) {
     // Call Gemini Vision for labels and caption
     let aiLabels: string[] = [];
     let aiCaption = "";
-    try {
-      const aiResult = await analyzeImageWithGemini({ imageBase64 });
-      aiLabels = aiResult.labels;
-      aiCaption = aiResult.caption;
-    } catch (e) {
-      console.error("Gemini Vision error:", e);
-    }
-
-    // Use provided categories/description, or fallback to AI
-    let categories: string[] = [];
-    if (categoriesJson) {
+    if (type === "image") {
       try {
-        categories = JSON.parse(categoriesJson);
-      } catch {
-        categories = [];
+        const aiResult = await analyzeImageWithGemini({ imageBase64 });
+        console.log("ai result", aiResult);
+        aiLabels = aiResult.labels || [];
+        aiCaption = aiResult.caption || "";
+      } catch (e) {
+        console.error("Gemini Vision error:", e);
       }
     }
-    if (!categories || categories.length === 0) {
-      categories = aiLabels;
-    }
-    let finalDescription = description;
-    if (!finalDescription || finalDescription.trim() === "") {
-      finalDescription = aiCaption;
-    }
-
-    const mediaItem = await saveMediaItem(
-      userId,
-      file,
-      type,
-      categories,
-      finalDescription,
-      phash
-    );
 
     return NextResponse.json(
-      { message: "Media uploaded successfully", mediaItem },
-      { status: 201 }
+      {
+        message: "File processed for suggestions",
+        suggestions: {
+          categories: aiLabels,
+          description: aiCaption,
+        },
+      },
+      { status: 200 }
     );
   } catch (error) {
     console.error("Upload error:", error);
