@@ -140,12 +140,10 @@ export default function MediaUploader({
           return newProgress >= 90 ? 90 : newProgress;
         });
       }, 200);
-      console.log("in progress interval:", progressInterval);
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
-      console.log("Response: ", response);
       clearInterval(progressInterval);
 
       if (!response.ok) {

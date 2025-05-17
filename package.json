@@ -26,7 +26,6 @@
     "embla-carousel-react": "8.5.1",
     "framer-motion": "latest",
     "fs": "latest",
-    "imghash": "^0.0.9",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "mongoose": "^8.14.3",
