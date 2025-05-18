@@ -23,7 +23,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import type { MediaItem } from "@/lib/media";
 import PexelsPicker from "@/components/PexelsPicker";
 import type { Category } from "@/lib/category";
-import { DEFAULT_CATEGORIES } from "@/lib/utils";
 import CategoryGrid from "@/components/category-grid";
 
 interface GalleryLayoutProps {
@@ -37,18 +36,17 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPexelsUploading, setIsPexelsUploading] = useState(false);
-  // const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
-  const categories = DEFAULT_CATEGORIES;
   useEffect(() => {
     fetchMediaItems();
   }, [activeTab]);
 
-  // useEffect(() => {
-  //   fetchCategories();
-  // }, []);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const fetchMediaItems = async () => {
     setIsLoading(true);
@@ -84,23 +82,23 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
     }
   };
 
-  // const fetchCategories = async () => {
-  //   setIsLoadingCategories(true);
-  //   try {
-  //     const res = await fetch("/api/categories?userId=${userId}");
-  //     if (!res.ok) throw new Error("Failed to fetch categories");
-  //     const data = await res.json();
-  //     setCategories(data);
-  //   } catch (e) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to load categories",
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setIsLoadingCategories(false);
-  //   }
-  // };
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const res = await fetch("/api/categories?userId=${userId}");
+      if (!res.ok) throw new Error("Failed to fetch categories");
+      const data = await res.json();
+      setCategories(data);
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to load categories",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   const handleUploadSuccess = () => {
     setShowUploader(false);
@@ -221,7 +219,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               onUpdate={fetchMediaItems}
               userId={userId}
               categories={categories}
-              // refreshCategories={fetchCategories}
+              refreshCategories={fetchCategories}
             />
           </TabsContent>
 
@@ -235,7 +233,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               onUpdate={fetchMediaItems}
               userId={userId}
               categories={categories}
-              // refreshCategories={fetchCategories}
+              refreshCategories={fetchCategories}
             />
           </TabsContent>
 
@@ -249,7 +247,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               onUpdate={fetchMediaItems}
               userId={userId}
               categories={categories}
-              // refreshCategories={fetchCategories}
+              refreshCategories={fetchCategories}
             />
           </TabsContent>
 
@@ -261,7 +259,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               userId={userId}
               showJournal
               categories={categories}
-              // refreshCategories={fetchCategories}
+              refreshCategories={fetchCategories}
             />
           </TabsContent>
 
@@ -272,6 +270,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               isLoading={isLoading}
               userId={userId}
               onUpdate={fetchMediaItems}
+              refreshCategories={fetchCategories}
             />
           </TabsContent>
         </Tabs>
@@ -282,6 +281,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               userId={userId}
               activeTab={activeTab}
               mediaItems={mediaItems}
+              onMediaDeleted={fetchMediaItems}
             />
           </div>
         )}

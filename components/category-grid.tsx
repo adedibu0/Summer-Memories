@@ -16,10 +16,12 @@ import MediaViewer from "@/components/media-viewer";
 
 interface CategoryGridProps {
   mediaItems: MediaItem[];
-  categories: string[];
+  categories: { id: string; name: string }[];
+
   isLoading: boolean;
   userId: string;
   onUpdate: () => void;
+  refreshCategories: () => void;
 }
 
 export default function CategoryGrid({
@@ -28,6 +30,7 @@ export default function CategoryGrid({
   isLoading,
   userId,
   onUpdate,
+  refreshCategories,
 }: CategoryGridProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -195,7 +198,8 @@ export default function CategoryGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {categories.map((cat) => {
-        const items = categoryMap[cat] || [];
+        const items =
+          categoryMap[cat as unknown as keyof typeof categoryMap] || [];
         if (items.length === 0) return null;
 
         if (items.length === 1) {
@@ -203,9 +207,9 @@ export default function CategoryGrid({
           const item = items[0];
           return (
             <motion.div
-              key={cat}
+              key={cat.id}
               className="group relative rounded-xl overflow-hidden shadow-lg cursor-pointer h-80"
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategory(cat.name)}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
@@ -240,7 +244,9 @@ export default function CategoryGrid({
                   whileHover={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <h3 className="font-bold text-2xl text-white mb-1">{cat}</h3>
+                  <h3 className="font-bold text-2xl text-white mb-1">
+                    {cat.name}
+                  </h3>
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="secondary"
@@ -269,99 +275,12 @@ export default function CategoryGrid({
             </motion.div>
           );
         } else {
-          // Multiple items category design
-          // return (
-          //   <motion.div
-          //     key={cat}
-          //     className="group relative rounded-xl overflow-hidden shadow-lg cursor-pointer h-80 bg-card"
-          //     onClick={() => setSelectedCategory(cat)}
-          //     initial={{ opacity: 0, scale: 0.95 }}
-          //     animate={{ opacity: 1, scale: 1 }}
-          //     transition={{ duration: 0.4 }}
-          //     whileHover={{
-          //       scale: 1.02,
-          //       transition: { duration: 0.2 },
-          //     }}
-          //   >
-          //     {/* Mosaic grid layout for multiple items */}
-          //     <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1 p-1">
-          //       {items.slice(0, 4).map((item, idx) => (
-          //         <div
-          //           key={item.id}
-          //           className={`relative overflow-hidden ${
-          //             idx === 0 && items.length >= 4
-          //               ? "col-span-1 row-span-1"
-          //               : idx === 0
-          //                 ? "col-span-2 row-span-2"
-          //                 : ""
-          //           }`}
-          //         >
-          //           {item.type === "image" ? (
-          //             <img
-          //               src={`/api/media/file/${item.id}?userId=${userId}`}
-          //               alt={item.description || "Image"}
-          //               className="w-full h-full object-cover"
-          //             />
-          //           ) : (
-          //             <div className="relative w-full h-full">
-          //               <video className="w-full h-full object-cover">
-          //                 <source src={`/api/media/file/${item.id}?userId=${userId}`} type="video/mp4" />
-          //               </video>
-          //               <div className="absolute inset-0 flex items-center justify-center">
-          //                 <VideoIcon className="h-5 w-5 text-white" />
-          //               </div>
-          //             </div>
-          //           )}
-
-          //           {/* Show count overlay for the last visible item if there are more */}
-          //           {idx === 3 && items.length > 4 && (
-          //             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-          //               <span className="text-white font-bold text-xl">+{items.length - 4}</span>
-          //             </div>
-          //           )}
-          //         </div>
-          //       ))}
-          //     </div>
-
-          //     {/* Content overlay */}
-          //     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-          //       <motion.div
-          //         initial={{ y: 10, opacity: 0.8 }}
-          //         whileHover={{ y: 0, opacity: 1 }}
-          //         transition={{ duration: 0.3 }}
-          //       >
-          //         <h3 className="font-bold text-2xl text-white mb-1">{cat}</h3>
-          //         <div className="flex items-center gap-2">
-          //           <Badge variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
-          //             {items.length} items
-          //           </Badge>
-          //           <Badge variant="outline" className="bg-white/10 text-white border-white/20">
-          //             <Grid2X2Icon className="h-3 w-3 mr-1" /> Collection
-          //           </Badge>
-          //         </div>
-          //       </motion.div>
-          //     </div>
-
-          //     {/* Hover effect button */}
-          //     <motion.div
-          //       className="absolute top-4 right-4"
-          //       initial={{ opacity: 0, scale: 0.8 }}
-          //       whileHover={{ opacity: 1, scale: 1 }}
-          //       transition={{ duration: 0.2 }}
-          //     >
-          //       <Button size="sm" variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
-          //         View All
-          //       </Button>
-          //     </motion.div>
-          //   </motion.div>
-          // )
-
           // Multiple items category design with cascade effect
           return (
             <motion.div
-              key={cat}
+              key={cat.id}
               className="group relative rounded-xl overflow-hidden shadow-lg cursor-pointer h-80 bg-card"
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategory(cat.name)}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
@@ -447,7 +366,7 @@ export default function CategoryGrid({
                         transition={{ duration: 0.3 }}
                       >
                         <h3 className="font-bold text-2xl text-white mb-1">
-                          {cat}
+                          {cat.name}
                         </h3>
                         <div className="flex items-center gap-2">
                           <Badge

@@ -86,19 +86,6 @@ export default function MediaViewer({
 
     let generatedText = "";
 
-    if (type === "gps") {
-      // This requires backend implementation to extract and enrich GPS data
-      generatedText = "(GPS metadata suggestion - backend not implemented)";
-      toast({
-        title: "GPS Suggestion",
-        description: "Backend implementation for GPS metadata is missing.",
-        variant: "info",
-      });
-      setJournal((prev) => prev + (prev ? "\n\n" : "") + generatedText);
-      setIsGeneratingAi(false);
-      return;
-    }
-
     try {
       const response = await fetch("/api/media/suggest", {
         method: "POST",

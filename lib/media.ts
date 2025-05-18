@@ -3,6 +3,7 @@ import path from "path";
 import ExifReader from "exifreader";
 import { analyzeMediaWithGemini } from "@/lib/geminiVision";
 import { createUserContent, Type } from "@google/genai";
+import calculatePhash from "sharp-phash";
 
 const mediaDir = path.join(process.cwd(), "data", "media");
 
@@ -68,6 +69,18 @@ export const saveMediaItem = (
       // Save file
       const buffer = Buffer.from(await file.arrayBuffer());
       fs.writeFileSync(filePath, buffer);
+
+      // Calculate perceptual hash for images
+      let phash: string | undefined;
+      if (type === "image") {
+        try {
+          phash = await calculatePhash(buffer);
+          console.log(`Calculated pHash for ${filename}:`, phash);
+        } catch (phashError) {
+          console.error(`Error calculating pHash for ${filename}:`, phashError);
+          // Continue without pHash if calculation fails
+        }
+      }
 
       // Extract GPS data for images using exifreader
       let gpsData: { latitude: number; longitude: number } | undefined;

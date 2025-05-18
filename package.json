@@ -43,6 +43,7 @@
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
     "sharp": "^0.34.1",
+    "sharp-phash": "^2.2.0",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",

@@ -16,9 +16,8 @@ interface MediaGridProps {
   userId: string;
   showJournal?: boolean;
   groupedMedia?: { [date: string]: MediaItem[] };
-  // categories: { id: string; name: string }[];
-  categories: string[];
-  // refreshCategories: () => void;
+  categories: { id: string; name: string }[];
+  refreshCategories: () => void;
 }
 
 export default function MediaGrid({
@@ -29,7 +28,8 @@ export default function MediaGrid({
   showJournal = false,
   groupedMedia,
   categories,
-}: // refreshCategories,
+  refreshCategories,
+}: // ,
 MediaGridProps) {
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
   const { toast } = useToast();
@@ -127,8 +127,7 @@ MediaGridProps) {
       await handleAddCategory();
       categoryToAdd = selectedCategory;
     }
-    // const categoryObj = categories.find((cat) => cat.id === categoryToAdd);
-    const categoryObj = categories.find((cat) => cat === categoryToAdd);
+    const categoryObj = categories.find((cat) => cat.id === categoryToAdd);
     if (!categoryObj) {
       toast({
         title: "No category",
@@ -244,10 +243,8 @@ MediaGridProps) {
               >
                 <option value="">Select category</option>
                 {userCategories.map((cat) => (
-                  // <option key={cat.id} value={cat.id}>
-                  <option key={cat} value={cat}>
-                    {/* {cat.name} */}
-                    {cat}
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
                   </option>
                 ))}
                 <option value="__new__">+ Create new category</option>
