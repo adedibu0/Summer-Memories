@@ -84,43 +84,62 @@ export default function MediaViewer({
     setIsGeneratingAi(true);
     setShowAiOptions(false); // Hide options after selection
 
-    // TODO: Implement backend API call to get AI suggestion
-    // This is a placeholder
     let generatedText = "";
-    switch (type) {
-      case "gps":
-        // This requires backend implementation to extract and enrich GPS data
-        generatedText = "(GPS metadata suggestion - backend not implemented)";
-        toast({
-          title: "GPS Suggestion",
-          description: "Backend implementation for GPS metadata is missing.",
-          variant: "info",
-        });
-        break;
-      case "mood":
-        // Call backend to analyze mood using AI
-        generatedText = `(Mood suggestion for ${item.type} - backend not implemented)`;
-        toast({
-          title: "Mood Suggestion",
-          description: "Backend implementation for mood analysis is missing.",
-          variant: "info",
-        });
-        break;
-      case "poetic":
-        // Call backend to generate poetic caption using AI
-        generatedText = `(Poetic caption for ${item.type} - backend not implemented)`;
-        toast({
-          title: "Poetic Caption Suggestion",
-          description: "Backend implementation for poetic caption is missing.",
-          variant: "info",
-        });
-        break;
+
+    if (type === "gps") {
+      // This requires backend implementation to extract and enrich GPS data
+      generatedText = "(GPS metadata suggestion - backend not implemented)";
+      toast({
+        title: "GPS Suggestion",
+        description: "Backend implementation for GPS metadata is missing.",
+        variant: "info",
+      });
+      setJournal((prev) => prev + (prev ? "\n\n" : "") + generatedText);
+      setIsGeneratingAi(false);
+      return;
     }
 
-    // Append generated text to the current journal content
-    setJournal((prev) => prev + (prev ? "\n\n" : "") + generatedText);
+    try {
+      const response = await fetch("/api/media/suggest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mediaId: item.id,
+          suggestionType: type,
+          userId: userId, // Pass userId to the backend
+        }),
+      });
 
-    setIsGeneratingAi(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to get AI suggestion");
+      }
+
+      const result = await response.json();
+      generatedText = result.suggestion;
+
+      // Append generated text to the current journal content
+      setJournal((prev) => prev + (prev ? "\n\n" : "") + generatedText);
+
+      toast({
+        title: "AI Suggestion",
+        description: `Generated ${type} suggestion successfully.`, // Provide feedback
+      });
+    } catch (error) {
+      console.error("Error fetching AI suggestion:", error);
+      toast({
+        title: "AI Suggestion Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingAi(false);
+    }
   };
 
   return (

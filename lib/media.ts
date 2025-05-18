@@ -1,9 +1,16 @@
 import fs from "fs";
 import path from "path";
-import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import ExifReader from "exifreader";
+import { analyzeMediaWithGemini } from "@/lib/geminiVision";
+import { createUserContent, Type } from "@google/genai";
 
 const mediaDir = path.join(process.cwd(), "data", "media");
+
+// Define interface for the expected AI suggestion format
+interface SuggestedGroup {
+  name: string;
+  items: string[];
+}
 
 // Ensure the media directory exists
 const ensureMediaDir = (userId: string) => {
@@ -25,11 +32,13 @@ export type MediaItem = {
   userId: string;
   filename: string;
   type: "image" | "video";
+  mimeType: string;
   categories: string[];
   description: string;
   createdAt: string;
   journal?: string;
   phash?: string;
+  gpsData?: { latitude: number; longitude: number };
 };
 
 export const getMediaItems = (userId: string): MediaItem[] => {
@@ -60,16 +69,51 @@ export const saveMediaItem = (
       const buffer = Buffer.from(await file.arrayBuffer());
       fs.writeFileSync(filePath, buffer);
 
+      // Extract GPS data for images using exifreader
+      let gpsData: { latitude: number; longitude: number } | undefined;
+      if (type === "image") {
+        try {
+          const tags = await ExifReader.load(buffer);
+
+          // Check for GPS tags
+          if (tags.GPSLatitude && tags.GPSLongitude) {
+            // exifreader provides .description for the value and .description for the reference
+            const latitude =
+              parseFloat(tags.GPSLatitude.description) *
+              (tags.GPSLatitudeRef?.description === "S" ? -1 : 1);
+            const longitude =
+              parseFloat(tags.GPSLongitude.description) *
+              (tags.GPSLongitudeRef?.description === "W" ? -1 : 1);
+
+            if (!isNaN(latitude) && !isNaN(longitude)) {
+              gpsData = {
+                latitude,
+                longitude,
+              };
+              console.log(`Extracted GPS data for ${filename}:`, gpsData);
+            }
+          }
+        } catch (exifError) {
+          console.error(
+            `Error extracting EXIF data for ${filename}:`,
+            exifError
+          );
+          // Continue without GPS data if extraction fails
+        }
+      }
+
       // Create media item
       const newItem: MediaItem = {
         id,
         userId,
         filename,
         type,
+        mimeType: file.type,
         categories,
         description,
         createdAt: new Date().toISOString(),
         ...(phash ? { phash } : {}),
+        ...(gpsData ? { gpsData } : {}),
       };
 
       mediaItems.push(newItem);
@@ -152,17 +196,71 @@ export const suggestGroups = async (
     categories: item.categories,
   }));
 
+  // Construct the prompt
+  const promptText = `Analyze these media items and suggest logical groupings based on their descriptions and categories. Return the result as a JSON array of objects, each with a "name" for the group and "items" array containing the IDs of media items that belong in that group. Here are the media items: ${JSON.stringify(
+    mediaDescriptions
+  )}`;
+
+  // Define the response schema for grouping suggestions
+  const groupingSchema = {
+    type: Type.ARRAY, // Expecting an array
+    items: {
+      type: Type.OBJECT, // Each item in the array is an object
+      properties: {
+        name: {
+          type: Type.STRING, // Group name is a string
+        },
+        items: {
+          type: Type.ARRAY, // The items field is an array
+          items: {
+            type: Type.STRING, // Each item ID is a string
+          },
+        },
+      },
+      required: ["name", "items"], // Both name and items are required in each group object
+    },
+  };
+
+  const contents = createUserContent([{ text: promptText }]);
+
   try {
-    const { text } = await generateText({
-      model: openai("gpt-4o"),
-      prompt: `Analyze these media items and suggest logical groupings based on their descriptions and categories. Return the result as a JSON array of objects, each with a "name" for the group and "items" array containing the IDs of media items that belong in that group. Here are the media items: ${JSON.stringify(
-        mediaDescriptions
-      )}`,
+    // Call Gemini for suggestions with the specific schema
+    const aiResultText = await analyzeMediaWithGemini(contents, {
+      responseMimeType: "application/json",
+      responseSchema: groupingSchema,
     });
 
-    return JSON.parse(text);
+    if (!aiResultText) {
+      console.error(
+        "Gemini analysis returned empty response for suggestGroups."
+      );
+      return [];
+    }
+
+    // The prompt asks for JSON output, attempt to parse it
+    const suggestedGroups: SuggestedGroup[] = JSON.parse(aiResultText);
+
+    // Basic validation of the parsed structure
+    if (
+      Array.isArray(suggestedGroups) &&
+      suggestedGroups.every(
+        (group) =>
+          typeof group === "object" &&
+          typeof group.name === "string" &&
+          Array.isArray(group.items) &&
+          group.items.every((item) => typeof item === "string")
+      )
+    ) {
+      return suggestedGroups;
+    } else {
+      console.error(
+        "Gemini response for suggestGroups did not match expected JSON schema:",
+        aiResultText
+      );
+      return [];
+    }
   } catch (error) {
-    console.error("Error suggesting groups:", error);
+    console.error("Error suggesting groups with Gemini:", error);
     return [];
   }
 };

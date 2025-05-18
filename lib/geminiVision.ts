@@ -17,29 +17,29 @@ interface ImageInput {
   mimeType: string;
 }
 
-export async function analyzeMediaWithGemini(contents: Content) {
+// Define a basic interface for the response configuration
+interface GeminiResponseConfig {
+  responseMimeType?: string;
+  responseSchema?: {
+    // This structure depends on the Gemini API documentation for schema objects
+    type: Type; // Using the imported Type enum
+    properties?: { [key: string]: any }; // Loosely type properties for now
+    items?: any; // Loosely type items for array schemas
+    required?: string[];
+    // Add other schema properties as needed based on API docs
+  };
+  // Add other config properties if needed, e.g., safetySettings
+}
+
+export async function analyzeMediaWithGemini(
+  contents: Content,
+  config?: GeminiResponseConfig
+) {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash", // Using a multimodal model like gemini-2.0-flash or gemini-1.5-flash
       contents: contents,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            description: {
-              type: Type.STRING,
-            },
-            categories: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-          },
-          required: ["description", "categories"],
-        },
-      },
+      config: config,
     });
 
     // The response text will contain the model's analysis of all images based on the prompt
