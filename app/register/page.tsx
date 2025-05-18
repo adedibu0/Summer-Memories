@@ -6,7 +6,6 @@ import RegisterForm from "@/components/register-form";
 export default async function RegisterPage() {
   try {
     const session = await getServerSession(authOptions);
-    console.log("session", session);
 
     if (session) {
       redirect("/gallery");

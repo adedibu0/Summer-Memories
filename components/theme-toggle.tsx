@@ -1,22 +1,21 @@
-"use client"
+"use client";
 
-import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
-import { SunIcon, MoonIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { SunIcon, MoonIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   // Avoid hydration mismatch by only rendering after mount
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   function toggleTheme() {
-    console.log("Current theme:", resolvedTheme)
-    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }
 
   // Always render a button, even before mounting
@@ -38,5 +37,5 @@ export function ThemeToggle() {
         <SunIcon className="h-5 w-5" />
       )}
     </Button>
-  )
+  );
 }

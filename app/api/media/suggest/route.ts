@@ -105,10 +105,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      `Using mimeType ${itemMimeType} for Gemini analysis of ${mediaItem.filename}`
-    );
-
     const base64Data = bufferToBase64(fileBuffer);
 
     const mediaInputPart = {

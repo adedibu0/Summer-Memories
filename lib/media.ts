@@ -103,7 +103,6 @@ export const saveMediaItem = (
                 latitude,
                 longitude,
               };
-              console.log(`Extracted GPS data for ${filename}:`, gpsData);
             }
           }
         } catch (exifError) {

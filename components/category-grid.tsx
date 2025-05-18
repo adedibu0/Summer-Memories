@@ -13,10 +13,11 @@ import {
 } from "lucide-react";
 import type { MediaItem } from "@/lib/media";
 import MediaViewer from "@/components/media-viewer";
+import { Category } from "@/lib/category";
 
 interface CategoryGridProps {
   mediaItems: MediaItem[];
-  categories: { id: string; name: string }[];
+  categories: Category[];
 
   isLoading: boolean;
   userId: string;
@@ -37,14 +38,13 @@ export default function CategoryGrid({
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   // Group media by category
-  const categoryMap: { [cat: string]: MediaItem[] } = {};
+  const categoryMap: { [catName: string]: MediaItem[] } = {};
   for (const item of mediaItems) {
     for (const cat of item.categories || []) {
       if (!categoryMap[cat]) categoryMap[cat] = [];
       categoryMap[cat].push(item);
     }
   }
-
   // Modal viewer navigation handlers
   const handleOpenViewer = (idx: number) => setViewerIndex(idx);
   const handleCloseViewer = () => setViewerIndex(null);
@@ -198,8 +198,7 @@ export default function CategoryGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {categories.map((cat) => {
-        const items =
-          categoryMap[cat as unknown as keyof typeof categoryMap] || [];
+        const items = categoryMap[cat.name] || [];
         if (items.length === 0) return null;
 
         if (items.length === 1) {

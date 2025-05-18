@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
 
     try {
       const aiResultText = await analyzeMediaWithGemini(contents);
-      console.log("Gemini analysis result:", aiResultText);
 
       // Attempt to parse the JSON response from Gemini
       if (aiResultText) {

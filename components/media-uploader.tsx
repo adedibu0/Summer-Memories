@@ -251,7 +251,6 @@ export default function MediaUploader({
       }
 
       const result = await response.json();
-      console.log("Media saved successfully:", result);
 
       toast({
         title: "Upload successful",
