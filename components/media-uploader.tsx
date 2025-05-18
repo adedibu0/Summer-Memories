@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,11 +22,8 @@ import {
   Loader2Icon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  isValidFileType,
-  isValidFileSize,
-  DEFAULT_CATEGORIES,
-} from "@/lib/utils";
+import { isValidFileType, isValidFileSize, fetchCategories } from "@/lib/utils";
+import { Category } from "@/lib/category";
 
 interface MediaUploaderProps {
   userId: string;
@@ -53,6 +50,8 @@ export default function MediaUploader({
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<UploadStep>("select_file");
@@ -60,6 +59,24 @@ export default function MediaUploader({
     null
   );
 
+  const fetchCategory = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const data: Category[] = await fetchCategories(userId);
+      setCategories(data);
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to load categories",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+  useEffect(() => {
+    fetchCategory();
+  }, []);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
@@ -478,18 +495,27 @@ export default function MediaUploader({
                   ))}
 
                   {/* Default Categories */}
-                  {DEFAULT_CATEGORIES.filter(
-                    (cat) => !aiSuggestions.categories.includes(cat)
-                  ).map((category) => (
-                    <div key={category} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`category-${category}`}
-                        checked={selectedCategories.includes(category)}
-                        onCheckedChange={() => handleCategoryToggle(category)}
-                      />
-                      <Label htmlFor={`category-${category}`}>{category}</Label>
-                    </div>
-                  ))}
+                  {categories
+                    .filter(
+                      (cat) => !aiSuggestions.categories.includes(cat.name)
+                    )
+                    .map((category) => (
+                      <div
+                        key={category.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`category-${category}`}
+                          checked={selectedCategories.includes(category.name)}
+                          onCheckedChange={() =>
+                            handleCategoryToggle(category.name)
+                          }
+                        />
+                        <Label htmlFor={`category-${category}`}>
+                          {category}
+                        </Label>
+                      </div>
+                    ))}
                 </div>
               </div>
 

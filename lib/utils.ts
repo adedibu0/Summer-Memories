@@ -43,3 +43,12 @@ export const DEFAULT_CATEGORIES = [
   "Sports",
   "Other",
 ];
+export const fetchCategories = async (userId: string) => {
+  const res = await fetch(`/api/categories?userId=${userId}`);
+  if (res.ok) {
+    const data = await res.json();
+    return data;
+  } else {
+    return "Error fetching categories";
+  }
+};

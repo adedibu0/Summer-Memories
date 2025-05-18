@@ -22,8 +22,9 @@ import AIRecommendations from "@/components/ai-recommendations";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { MediaItem } from "@/lib/media";
 import PexelsPicker from "@/components/PexelsPicker";
-import type { Category } from "@/lib/category";
+import { type Category } from "@/lib/category";
 import CategoryGrid from "@/components/category-grid";
+import { fetchCategories } from "@/lib/utils";
 
 interface GalleryLayoutProps {
   userId: string;
@@ -45,7 +46,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
   }, [activeTab]);
 
   useEffect(() => {
-    fetchCategories();
+    fetchCategory();
   }, []);
 
   const fetchMediaItems = async () => {
@@ -82,12 +83,10 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategory = async () => {
     setIsLoadingCategories(true);
     try {
-      const res = await fetch("/api/categories?userId=${userId}");
-      if (!res.ok) throw new Error("Failed to fetch categories");
-      const data = await res.json();
+      const data: Category[] = await fetchCategories(userId);
       setCategories(data);
     } catch (e) {
       toast({
@@ -219,7 +218,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               onUpdate={fetchMediaItems}
               userId={userId}
               categories={categories}
-              refreshCategories={fetchCategories}
+              refreshCategories={fetchCategory}
             />
           </TabsContent>
 
@@ -233,7 +232,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               onUpdate={fetchMediaItems}
               userId={userId}
               categories={categories}
-              refreshCategories={fetchCategories}
+              refreshCategories={fetchCategory}
             />
           </TabsContent>
 
@@ -247,7 +246,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               onUpdate={fetchMediaItems}
               userId={userId}
               categories={categories}
-              refreshCategories={fetchCategories}
+              refreshCategories={fetchCategory}
             />
           </TabsContent>
 
@@ -259,7 +258,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               userId={userId}
               showJournal
               categories={categories}
-              refreshCategories={fetchCategories}
+              refreshCategories={fetchCategory}
             />
           </TabsContent>
 
@@ -270,7 +269,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
               isLoading={isLoading}
               userId={userId}
               onUpdate={fetchMediaItems}
-              refreshCategories={fetchCategories}
+              refreshCategories={fetchCategory}
             />
           </TabsContent>
         </Tabs>

@@ -5,7 +5,6 @@ import LandingPage from "@/components/landing-page";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
-  console.log("session: ", session);
 
   if (session) {
     redirect("/gallery");
