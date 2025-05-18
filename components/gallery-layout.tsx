@@ -280,7 +280,8 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
           <div className="mt-12">
             <AIRecommendations
               userId={userId}
-              onGroupSelect={fetchMediaItems}
+              activeTab={activeTab}
+              mediaItems={mediaItems}
             />
           </div>
         )}
@@ -360,7 +361,7 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
                           "description",
                           `From Pexels by ${item.photographer || "unknown"}`
                         );
-                        await fetch("/api/upload", {
+                        await fetch("/api/save-media", {
                           method: "POST",
                           body: formData,
                         });

@@ -7,7 +7,7 @@ import { createUserContent, Type } from "@google/genai";
 const mediaDir = path.join(process.cwd(), "data", "media");
 
 // Define interface for the expected AI suggestion format
-interface SuggestedGroup {
+export interface SuggestedGroup {
   name: string;
   items: string[];
 }

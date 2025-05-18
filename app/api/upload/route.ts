@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { saveMediaItem, getMediaItems } from "@/lib/media";
+import { getMediaItems } from "@/lib/media";
 import { analyzeMediaWithGemini, bufferToBase64 } from "@/lib/geminiVision";
 import { getImagePhash, hammingDistance } from "@/lib/perceptualHash";
 import { DEFAULT_CATEGORIES } from "@/lib/utils";
