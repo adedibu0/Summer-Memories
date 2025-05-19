@@ -79,7 +79,9 @@ export default function MediaViewer({
     }
   };
 
-  const handleAiSuggestion = async (type: "gps" | "mood" | "poetic") => {
+  const handleAiSuggestion = async (
+    type: "special-day" | "mood" | "poetic"
+  ) => {
     setIsGeneratingAi(true);
     setShowAiOptions(false); // Hide options after selection
 
@@ -261,10 +263,10 @@ export default function MediaViewer({
                       <p className="font-medium">Suggestions:</p>
                       <button
                         className="text-blue-600 hover:underline disabled:text-gray-500 disabled:no-underline"
-                        onClick={() => handleAiSuggestion("gps")}
+                        onClick={() => handleAiSuggestion("special-day")}
                         disabled={isGeneratingAi}
                       >
-                        - Extract GPS metadata and enrich
+                        - Check if this was a special day
                       </button>
                       <button
                         className="text-blue-600 hover:underline disabled:text-gray-500 disabled:no-underline"

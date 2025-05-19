@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validSuggestionTypes = ["gps", "mood", "poetic"];
+    const validSuggestionTypes = ["mood", "poetic", "special-day"];
     if (!validSuggestionTypes.includes(suggestionType)) {
       return NextResponse.json(
         { message: "Invalid suggestionType" },
@@ -114,18 +114,12 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    // --- Logic for GPS suggestion ---
-    if (suggestionType === "gps") {
-      if (mediaItem.type !== "image" || !mediaItem.gpsData) {
-        return NextResponse.json(
-          { message: "No GPS data found for this media item." },
-          { status: 404 }
-        );
-      }
+    // --- Logic for Special Day suggestion ---
+    if (suggestionType === "special-day") {
+      const createdAtDate = new Date(mediaItem.createdAt);
+      const formattedDate = createdAtDate.toLocaleDateString();
 
-      const { latitude, longitude } = mediaItem.gpsData;
-
-      const promptText = `Given the GPS coordinates Latitude: ${latitude}, Longitude: ${longitude}, provide a short, human-readable description of the likely location. For example, "Near Eiffel Tower, Paris" or "In Central Park, New York City". Keep it concise.`;
+      const promptText = `Examine the content of this ${mediaItem.type} created on ${formattedDate}. Does it appear to capture a special day, holiday, or celebration? If so, describe what kind of event it might be. If not, state that it doesn't seem to be related to a special day.`;
 
       const contents = createUserContent([
         mediaInputPart,
@@ -139,7 +133,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             {
               message:
-                "AI analysis returned empty response for GPS enrichment.",
+                "AI analysis returned empty response for special day check.",
             },
             { status: 500 }
           );
@@ -150,9 +144,9 @@ export async function POST(request: NextRequest) {
           { status: 200 }
         );
       } catch (aiError) {
-        console.error("Gemini analysis error for GPS enrichment:", aiError);
+        console.error("Gemini analysis error for special day check:", aiError);
         return NextResponse.json(
-          { message: "Failed to get AI GPS suggestion" },
+          { message: "Failed to get AI special day suggestion" },
           { status: 500 }
         );
       }
