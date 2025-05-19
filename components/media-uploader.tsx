@@ -510,8 +510,8 @@ export default function MediaUploader({
                             handleCategoryToggle(category.name)
                           }
                         />
-                        <Label htmlFor={`category-${category}`}>
-                          {category}
+                        <Label htmlFor={`category-${category.name}`}>
+                          {category.name}
                         </Label>
                       </div>
                     ))}

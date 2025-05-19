@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getMediaItems } from "@/lib/media";
 import { analyzeMediaWithGemini, bufferToBase64 } from "@/lib/geminiVision";
 import { getImagePhash, hammingDistance } from "@/lib/perceptualHash";
-import { fetchCategories } from "@/lib/utils";
+import { getCategories } from "@/lib/category";
 import { createUserContent } from "@google/genai";
 
 export async function POST(request: NextRequest) {
@@ -17,7 +17,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const categories = await fetchCategories(userId);
+
+    // Fetch categories using the server-side function
+    const userCategories = getCategories(userId);
+    const categoryNames = userCategories.map((cat) => cat.name); // Extract category names
+
     // Read file as buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
     let aiCaption = "";
 
     const promptText = `Analyze this ${type} and provide a short description and relevant categories from the following list: ${JSON.stringify(
-      categories.name
+      categoryNames
     )}. Please output the result as a JSON object with two keys: "description" (string) and "categories" (array of strings from the list provided). For example: { "description": "A photo of...", "categories": ["Nature", "Travel"] }. If no categories are relevant, the "categories" array should be empty.`;
 
     const mediaInputPart = {
@@ -93,7 +97,7 @@ export async function POST(request: NextRequest) {
               aiLabels = resultJson.categories.filter(
                 (category: string) =>
                   typeof category === "string" &&
-                  categories.name.includes(category)
+                  categoryNames.includes(category)
               );
             }
           }

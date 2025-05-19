@@ -8,6 +8,7 @@ export async function PATCH(
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
+    const { id: mediaId } = await params;
 
     if (!userId) {
       return NextResponse.json(
@@ -16,7 +17,6 @@ export async function PATCH(
       );
     }
 
-    const mediaId = await params.id;
     const updates = await request.json();
 
     const updatedItem = updateMediaItem(userId, mediaId, updates);

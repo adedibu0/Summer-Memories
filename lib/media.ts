@@ -34,7 +34,7 @@ export type MediaItem = {
   filename: string;
   type: "image" | "video";
   mimeType: string;
-  categories: string[];
+  categories: (string | { id: string; name: string; userId: string })[];
   description: string;
   createdAt: string;
   journal?: string;

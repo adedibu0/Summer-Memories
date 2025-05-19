@@ -101,10 +101,10 @@ MediaGridProps) {
       const res = await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCategory.trim() }),
+        body: JSON.stringify({ name: newCategory.trim(), userId }),
       });
       if (!res.ok) throw new Error("Failed to add category");
-      // await refreshCategories();
+      await refreshCategories();
       // Set selectedCategory to the new category's id
       const data = await res.json();
       setSelectedCategory(data.id);

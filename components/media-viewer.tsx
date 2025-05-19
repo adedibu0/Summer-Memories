@@ -43,7 +43,6 @@ export default function MediaViewer({
   const { toast } = useToast();
   const [showAiOptions, setShowAiOptions] = useState(false);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-
   const handleSaveJournal = async () => {
     setIsSaving(true);
 
@@ -196,8 +195,11 @@ export default function MediaViewer({
 
             <div className="flex flex-wrap gap-2 mb-4">
               {item.categories.map((category) => (
-                <Badge key={category} variant="secondary">
-                  {category}
+                <Badge
+                  key={typeof category === "string" ? category : category.id}
+                  variant="secondary"
+                >
+                  {typeof category === "string" ? category : category.name}
                 </Badge>
               ))}
             </div>

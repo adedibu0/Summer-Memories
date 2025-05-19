@@ -10,6 +10,7 @@ export async function GET(
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
+    const { id: mediaId } = await params;
 
     if (!userId) {
       return NextResponse.json(
@@ -18,7 +19,6 @@ export async function GET(
       );
     }
 
-    const mediaId = await params.id;
     const mediaItems = getMediaItems(userId);
     const mediaItem = mediaItems.find((item) => item.id === mediaId);
 
