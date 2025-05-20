@@ -2,8 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getMediaItems } from "@/lib/media";
 import { analyzeMediaWithGemini, bufferToBase64 } from "@/lib/geminiVision";
 import { createUserContent } from "@google/genai";
-import * as fs from "node:fs";
-import * as path from "node:path";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Retrieve media item details
-    const mediaItems = getMediaItems(userId);
+    const mediaItems = await getMediaItems(userId);
     const mediaItem = mediaItems.find((item) => item.id === mediaId);
 
     if (!mediaItem) {
@@ -35,75 +33,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- Read file content and determine mimeType (common logic) ---
-    const mediaFilePath = path.join(
-      process.cwd(),
-      "data",
-      "media",
-      userId,
-      mediaItem.filename
-    );
-
-    let fileBuffer;
+    // --- Fetch file content from Cloudinary URL (common logic) ---
+    let fileBuffer: Buffer;
     try {
-      fileBuffer = fs.readFileSync(mediaFilePath);
-    } catch (readError) {
-      console.error("Error reading media file:", readError);
+      const response = await fetch(mediaItem.url);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch media from URL: ${response.statusText}`
+        );
+      }
+      // Get the array buffer and convert to Node.js Buffer
+      const arrayBuffer = await response.arrayBuffer();
+      fileBuffer = Buffer.from(arrayBuffer);
+    } catch (fetchError) {
+      console.error("Error fetching media from Cloudinary URL:", fetchError);
       return NextResponse.json(
-        { message: "Failed to read media file for analysis" },
+        { message: "Failed to fetch media file for analysis" },
         { status: 500 }
       );
     }
 
-    // Determine the correct mimeType for the API call (prioritize supported types, fallback to stored or infer)
+    // Determine mimeType (keep this logic, maybe simplify based on reliable data from DB)
+    // The mimeType is now stored in mediaItem.mimeType from MongoDB.
+    // We should primarily trust this, but keep validation if needed.
     let itemMimeType = mediaItem.mimeType;
-    const fileExtension = path.extname(mediaItem.filename).toLowerCase();
-    const genericMimeTypes = ["application/octet-stream"]; // Add other generic types if needed
 
-    // *** Strict check for video/mp4 to override potentially incorrect stored mimeType ***
-    if (mediaItem.type === "video" && fileExtension === ".mp4") {
-      itemMimeType = "video/mp4";
-    } else if (
-      mediaItem.type === "image" &&
-      (fileExtension === ".jpg" || fileExtension === ".jpeg")
-    ) {
-      itemMimeType = "image/jpeg"; // Also strictly set common image types
-    } else if (mediaItem.type === "image" && fileExtension === ".png") {
-      itemMimeType = "image/png";
-    } else if (mediaItem.type === "image" && fileExtension === ".gif") {
-      itemMimeType = "image/gif";
-    } else if (genericMimeTypes.includes(itemMimeType) || !itemMimeType) {
-      // Fallback: if stored mime is generic/missing and not caught by strict checks, infer from extension
-      if (fileExtension === ".jpg" || fileExtension === ".jpeg") {
-        itemMimeType = "image/jpeg";
-      } else if (fileExtension === ".png") {
-        itemMimeType = "image/png";
-      } else if (fileExtension === ".gif") {
-        itemMimeType = "image/gif";
-      } else if (fileExtension === ".mp4") {
-        itemMimeType = "video/mp4";
-      }
-      // Add other image/video extensions here if needed for inference
-    }
-
-    // Basic check if the *final* determined mimeType is supported by Gemini
+    // Basic check if the mimeType from DB is supported by Gemini
     const supportedMimeTypes = [
       "image/jpeg",
       "image/png",
       "image/gif",
       "video/mp4",
-    ]; // Add other supported types if needed
+      "image/webp", // Add webp as it's common
+    ];
+    // Simplified check: use the mimeType from the database
     if (!itemMimeType || !supportedMimeTypes.includes(itemMimeType)) {
       console.error(
-        `Unsupported mimeType for Gemini API: ${itemMimeType} for file ${mediaItem.filename}`
+        `Unsupported mimeType for Gemini API from DB: ${itemMimeType} for file ${mediaItem.filename}`
       );
       return NextResponse.json(
         {
-          message: `Unsupported media type for AI analysis: ${itemMimeType}. Please upload supported media types.`,
+          message: `Unsupported media type for AI analysis: ${itemMimeType}. Please upload supported media types.`, // Use itemMimeType here
         },
         { status: 400 }
       );
     }
+    // No need for complex path/extension logic if mimeType from DB is reliable
+    // const fileExtension = path.extname(mediaItem.filename).toLowerCase();
+    // const genericMimeTypes = ["application/octet-stream"];
+    // ... remove all the old mimeType inference logic ...
 
     const base64Data = bufferToBase64(fileBuffer);
 
@@ -118,8 +96,15 @@ export async function POST(request: NextRequest) {
     if (suggestionType === "special-day") {
       const createdAtDate = new Date(mediaItem.createdAt);
       const formattedDate = createdAtDate.toLocaleDateString();
+      const descClause = mediaItem.description
+        ? ` and its description ("${mediaItem.description}")`
+        : "";
 
-      const promptText = `Examine the content of this ${mediaItem.type} created on ${formattedDate}. Does it appear to capture a special day, holiday, or celebration? If so, describe what kind of event it might be. If not, state that it doesn't seem to be related to a special day.`;
+      const promptText = `Review this ${mediaItem.type}${descClause} from ${formattedDate}:
+    
+    1. If it shows a celebration (birthday, anniversary, festival, holiday), identify the event and mention ${formattedDate}.
+    2. Otherwise, if it captures a pleasant outing or personal moment, briefly describe it and note ${formattedDate}.
+    3. If neither applies, state that this item from ${formattedDate} doesn’t depict any special event or notable moment.`;
 
       const contents = createUserContent([
         mediaInputPart,
@@ -156,11 +141,14 @@ export async function POST(request: NextRequest) {
     if (suggestionType === "mood" || suggestionType === "poetic") {
       let promptText = "";
       if (suggestionType === "mood") {
-        promptText = `Analyze the mood in this ${mediaItem.type} and summarize it in one short sentence.`;
+        promptText = mediaItem.description
+          ? `Analyze the mood in this ${mediaItem.type}with this description: ${mediaItem.description} and summarize it in one short sentence.`
+          : `Analyze the mood in this ${mediaItem.type} and summarize it in one short sentence.`;
       } else if (suggestionType === "poetic") {
-        promptText = `Generate a short poetic caption for this ${mediaItem.type}.`;
+        promptText = mediaItem.description
+          ? `Generate a short poetic caption for this ${mediaItem.type} with this description: ${mediaItem.description}.`
+          : `Generate a short poetic caption for this ${mediaItem.type}.`;
       }
-
       const contents = createUserContent([
         mediaInputPart,
         { text: promptText },

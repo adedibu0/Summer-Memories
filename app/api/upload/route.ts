@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getMediaItems } from "@/lib/media";
 import { analyzeMediaWithGemini, bufferToBase64 } from "@/lib/geminiVision";
-import { getImagePhash, hammingDistance } from "@/lib/perceptualHash";
 import { getCategories } from "@/lib/category";
+import calculatePhash from "sharp-phash";
+
 import { createUserContent } from "@google/genai";
+import { connectToDatabase } from "@/lib/mongodb";
+import { MediaItemModel } from "@/lib/media";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch categories using the server-side function
-    const userCategories = getCategories(userId);
+    const userCategories = await getCategories(userId);
     const categoryNames = userCategories.map((cat) => cat.name); // Extract category names
 
     // Read file as buffer
@@ -27,24 +29,30 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
     const base64Data = bufferToBase64(buffer);
 
-    // Duplicate detection for images
+    // Duplicate detection for images (using exact phash match)
     let phash: string | undefined = undefined;
     if (type === "image") {
       try {
-        phash = await getImagePhash(buffer);
-        // Check for duplicates
-        const existing = getMediaItems(userId).filter(
-          (item) => item.type === "image" && item.phash
-        );
-        const threshold = 10; // Hamming distance threshold for near-duplicate
-        for (const item of existing) {
-          if (item.phash && hammingDistance(phash, item.phash) <= threshold) {
+        phash = await calculatePhash(buffer);
+
+        // --- Duplicate Detection for Images (using phash) ---
+        if (phash) {
+          await connectToDatabase(); // Ensure DB connection
+          // Find existing image items for this user with the same phash
+          const existingItem = await MediaItemModel.findOne({
+            userId,
+            type: "image",
+            phash: phash,
+          });
+
+          if (existingItem) {
             return NextResponse.json(
               {
-                message: "Duplicate image detected. Upload canceled.",
-                duplicateOf: item.id,
+                message:
+                  "Warning: A very similar image already exists in your collection.",
+                isDuplicate: true,
               },
-              { status: 409 }
+              { status: 200 } // Use 200 OK but with a flag indicating a duplicate warning
             );
           }
         }

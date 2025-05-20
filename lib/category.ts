@@ -1,19 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { DEFAULT_CATEGORIES } from "@/lib/utils";
-
-const categoriesFilePath = path.join(process.cwd(), "data", "categories.json");
-
-// Ensure the data directory and categories file exist
-const ensureDataDir = () => {
-  const dataDir = path.join(process.cwd(), "data");
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-  if (!fs.existsSync(categoriesFilePath)) {
-    fs.writeFileSync(categoriesFilePath, JSON.stringify([]));
-  }
-};
+import { connectToDatabase } from "./mongodb";
+import { Category, ICategory } from "@/models/Category";
+import mongoose from "mongoose";
 
 export type Category = {
   id: string;
@@ -21,63 +11,77 @@ export type Category = {
   userId: string;
 };
 
-export const getCategories = (userId: string): Category[] => {
-  ensureDataDir();
-  const categoriesData = fs.readFileSync(categoriesFilePath, "utf-8");
-  const allCategories: Category[] = JSON.parse(categoriesData);
-  return allCategories.filter((cat) => cat.userId === userId);
+export const getCategories = async (userId: string): Promise<ICategory[]> => {
+  await connectToDatabase();
+  // Assuming userId passed is a string, convert to ObjectId for querying
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  return Category.find({ userId: userObjectId });
 };
 
-export const addCategory = (name: string, userId: string): Category => {
-  const categories = getAllCategories();
-  const id = Date.now().toString();
-  const newCategory: Category = { id, name, userId };
-  categories.push(newCategory);
-  fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2));
+export const addCategory = async (
+  name: string,
+  userId: string
+): Promise<ICategory> => {
+  await connectToDatabase();
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const newCategory = new Category({
+    name,
+    userId: userObjectId,
+  });
+  await newCategory.save();
   return newCategory;
 };
 
-export const updateCategory = (
+export const updateCategory = async (
   id: string,
   name: string,
   userId: string
-): Category | undefined => {
-  const categories = getAllCategories();
-  const idx = categories.findIndex(
-    (cat) => cat.id === id && cat.userId === userId
+): Promise<ICategory | null> => {
+  await connectToDatabase();
+  // Assuming id and userId are strings, convert to ObjectId for querying
+  const categoryObjectId = new mongoose.Types.ObjectId(id);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const updatedCategory = await Category.findOneAndUpdate(
+    { _id: categoryObjectId, userId: userObjectId },
+    { name: name },
+    { new: true }
   );
-  if (idx === -1) return undefined;
-  categories[idx].name = name;
-  fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2));
-  return categories[idx];
+  return updatedCategory;
 };
 
-export const deleteCategory = (id: string, userId: string): boolean => {
-  const categories = getAllCategories();
-  const newCategories = categories.filter(
-    (cat) => !(cat.id === id && cat.userId === userId)
-  );
-  if (newCategories.length === categories.length) return false;
-  fs.writeFileSync(categoriesFilePath, JSON.stringify(newCategories, null, 2));
-  return true;
+export const deleteCategory = async (
+  id: string,
+  userId: string
+): Promise<boolean> => {
+  await connectToDatabase();
+  // Assuming id and userId are strings, convert to ObjectId for querying
+  const categoryObjectId = new mongoose.Types.ObjectId(id);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const result = await Category.deleteOne({
+    _id: categoryObjectId,
+    userId: userObjectId,
+  });
+  return result.deletedCount === 1;
 };
 
-export const initializeDefaultCategoriesForUser = (userId: string) => {
-  const categories = getAllCategories();
-  const userHasCategories = categories.some((cat) => cat.userId === userId);
+export const initializeDefaultCategoriesForUser = async (userId: string) => {
+  await connectToDatabase();
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const userHasCategories = await Category.exists({ userId: userObjectId });
   if (userHasCategories) return; // Don't re-initialize
-  const newCategories = DEFAULT_CATEGORIES.map((name) => ({
-    id: `${userId}-${name}`,
+
+  const defaultCategories = DEFAULT_CATEGORIES.map((name) => ({
     name,
-    userId,
+    userId: userObjectId,
   }));
-  const updated = [...categories, ...newCategories];
-  fs.writeFileSync(categoriesFilePath, JSON.stringify(updated, null, 2));
+
+  await Category.insertMany(defaultCategories);
 };
 
 // Helper to get all categories (not filtered)
-const getAllCategories = (): Category[] => {
-  ensureDataDir();
-  const categoriesData = fs.readFileSync(categoriesFilePath, "utf-8");
-  return JSON.parse(categoriesData);
+// This helper might not be needed anymore, depending on usage.
+// If needed, it should also query MongoDB.
+const getAllCategories = async (): Promise<ICategory[]> => {
+  await connectToDatabase();
+  return Category.find({});
 };

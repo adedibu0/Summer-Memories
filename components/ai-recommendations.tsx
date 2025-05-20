@@ -117,12 +117,10 @@ export default function AIRecommendations({
     setIsLoadingDuplicates(true);
     try {
       for (const itemId of selectedDuplicates) {
-        const response = await fetch(
-          `/api/media/delete?userId=${userId}&mediaId=${itemId}`,
-          {
-            method: "DELETE",
-          }
-        );
+        console.log("UserId and mediaId", userId, itemId);
+        const response = await fetch(`/api/media/${itemId}?userId=${userId}`, {
+          method: "DELETE",
+        });
 
         if (!response.ok) {
           console.error(`Failed to delete media item ${itemId}`);
@@ -343,7 +341,7 @@ export default function AIRecommendations({
                           />
                           {item.type === "image" ? (
                             <img
-                              src={`/api/media/view?userId=${userId}&mediaId=${item.id}`}
+                              src={item.url}
                               alt={item.description}
                               className="w-full h-full object-cover"
                             />

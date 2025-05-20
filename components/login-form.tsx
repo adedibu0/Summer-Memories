@@ -28,6 +28,7 @@ import { SunIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
+import { FaGoogle } from "react-icons/fa";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -163,6 +164,7 @@ export default function LoginForm() {
           className="w-full"
           onClick={() => signIn("google", { callbackUrl: "/gallery" })}
         >
+          <FaGoogle />
           Google
         </Button>
       </CardContent>

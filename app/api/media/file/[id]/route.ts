@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+// import fs from "fs";
+// import path from "path";
 import { getMediaItems } from "@/lib/media";
 
 export async function GET(
@@ -19,8 +19,10 @@ export async function GET(
       );
     }
 
-    const mediaItems = getMediaItems(userId);
-    const mediaItem = mediaItems.find((item) => item.id === mediaId);
+    const mediaItems = await getMediaItems(userId);
+    const mediaItem = mediaItems.find(
+      (item: { id: string }) => item.id === mediaId
+    );
 
     if (!mediaItem) {
       return NextResponse.json(
@@ -29,27 +31,16 @@ export async function GET(
       );
     }
 
-    const filePath = path.join(
-      process.cwd(),
-      "data",
-      "media",
-      userId,
-      mediaItem.filename
-    );
-
-    if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ message: "File not found" }, { status: 404 });
+    // Use the Cloudinary URL instead of the local file path
+    if (!mediaItem.url) {
+      return NextResponse.json(
+        { message: "Media item URL not found" },
+        { status: 404 }
+      );
     }
 
-    const fileBuffer = fs.readFileSync(filePath);
-    const contentType = mediaItem.type === "image" ? "image/jpeg" : "video/mp4";
-
-    return new NextResponse(fileBuffer, {
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
+    // Redirect to the Cloudinary URL
+    return NextResponse.redirect(mediaItem.url);
   } catch (error) {
     console.error("Error serving media file:", error);
     return NextResponse.json(
