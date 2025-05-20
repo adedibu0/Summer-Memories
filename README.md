@@ -1,6 +1,6 @@
 # Summer Memories
 
-Summer Memories is a smart media organization tool designed to help you effortlessly manage your cherished photos and videos. Leveraging the power of AI, this application goes beyond simple storage, offering intelligent features to make revisiting your memories a joy.
+Summer Memories is a smart media organization tool designed to help you effortlessly manage your cherished summer photos and videos. Leveraging the power of AI, this application goes beyond simple storage, offering intelligent features to make revisiting your memories a joy.
 
 **How it Works:**
 
@@ -25,7 +25,13 @@ Follow these steps to get the project up and running on your local machine:
     pnpm install
     ```
 
-3.  **Run the development server:**
+3.  **Set up environment variables:**
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+4.  **Run the development server:**
 
     ```bash
     npm run dev
@@ -33,7 +39,9 @@ Follow these steps to get the project up and running on your local machine:
 
 ## Demo Video
 
-[Insert link to your demo video here]
+Watch our demo video to see Summer Memories in action:
+
+[DEMO URL](https://www.loom.com/share/32928896b2564f5b870f629605cbed78?sid=23acc2e2-cbf6-4c5d-8604-86749b6e2cb1)
 
 **Why Adopt Summer Memories?**
 

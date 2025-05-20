@@ -7,18 +7,6 @@ import { User, IUser } from "@/models/User";
 
 const usersFilePath = path.join(process.cwd(), "data", "users.json");
 
-// Ensure the data directory exists
-const ensureDataDir = () => {
-  const dataDir = path.join(process.cwd(), "data");
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-
-  if (!fs.existsSync(usersFilePath)) {
-    fs.writeFileSync(usersFilePath, JSON.stringify([]));
-  }
-};
-
 export type User = {
   id: string;
   name: string;
