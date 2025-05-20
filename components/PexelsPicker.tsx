@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
 interface PexelsMedia {
   id: number;
@@ -32,32 +33,40 @@ export default function PexelsPicker({ onClose, onSelect }: PexelsPickerProps) {
     setLoading(true);
     setError(null);
     try {
+      const query = "summer";
+      const headers = { Authorization: PEXELS_API_KEY || "" };
+
       // Fetch images
-      const imgRes = await fetch(
-        `https://api.pexels.com/v1/collections/${COLLECTION_ID}?per_page=30`,
-        {
-          headers: { Authorization: PEXELS_API_KEY || "" },
-        }
-      );
-      const imgData = await imgRes.json();
-      const images: PexelsMedia[] = (imgData?.media || [])
-        .filter((item: any) => item.type === "Photo")
-        .map((item: any) => ({
+      const imgRes = await axios.get("https://api.pexels.com/v1/search", {
+        headers,
+        params: {
+          query,
+          per_page: 20,
+          page: 1,
+        },
+      });
+
+      const images: PexelsMedia[] = (imgRes.data.photos || []).map(
+        (item: any) => ({
           id: item.id,
           type: "image",
           url: item.src.original,
           thumbnail: item.src.medium,
           photographer: item.photographer,
-        }));
-      // Fetch videos (Pexels API does not support videos in collections, so we fetch popular videos)
-      const vidRes = await fetch(
-        `https://api.pexels.com/videos/popular?per_page=10`,
-        {
-          headers: { Authorization: PEXELS_API_KEY || "" },
-        }
+        })
       );
-      const vidData = await vidRes.json();
-      const videos: PexelsMedia[] = (vidData?.videos || []).map(
+
+      // Fetch videos
+      const vidRes = await axios.get("https://api.pexels.com/videos/search", {
+        headers,
+        params: {
+          query,
+          per_page: 10,
+          page: 1,
+        },
+      });
+
+      const videos: PexelsMedia[] = (vidRes.data.videos || []).map(
         (item: any) => ({
           id: item.id,
           type: "video",
@@ -66,9 +75,11 @@ export default function PexelsPicker({ onClose, onSelect }: PexelsPickerProps) {
           photographer: item.user?.name,
         })
       );
+
       setMedia([...images, ...videos]);
     } catch (e) {
       setError("Failed to load from Pexels");
+      console.error("Pexels API Error:", e);
     } finally {
       setLoading(false);
     }

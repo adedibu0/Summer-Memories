@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { SunIcon, CameraIcon, VideoIcon, BookOpenIcon } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { SunIcon, CameraIcon, VideoIcon, BookOpenIcon } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LandingPage() {
-  const [isHovering, setIsHovering] = useState(false)
+  const [isHovering, setIsHovering] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -41,7 +41,8 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  Capture Your <span className="text-primary">Summer Memories</span>
+                  Capture Your{" "}
+                  <span className="text-primary">Summer Memories</span>
                 </motion.h2>
                 <motion.p
                   className="text-lg mb-8 text-muted-foreground"
@@ -49,7 +50,8 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
                 >
-                  Store, organize, and relive your precious summer moments with our AI-powered gallery application.
+                  Store, organize, and relive your precious summer moments with
+                  our AI-powered gallery application.
                 </motion.p>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -79,13 +81,17 @@ export default function LandingPage() {
               >
                 <div className="relative aspect-video rounded-lg overflow-hidden shadow-2xl">
                   <img
-                    src="/placeholder.svg?height=600&width=800"
+                    src="/image.gif"
                     alt="Summer memories collage"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
-                    <h3 className="text-white text-xl font-bold">Your Summer Story</h3>
-                    <p className="text-white/80">Organize your photos and videos with ease</p>
+                    <h3 className="text-white text-xl font-bold">
+                      Your Summer Story
+                    </h3>
+                    <p className="text-white/80">
+                      Organize your photos and videos with ease
+                    </p>
                   </div>
                 </div>
 
@@ -120,7 +126,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">Photo Gallery</h3>
                 <p className="text-muted-foreground">
-                  Upload and organize your photos with custom categories and beautiful animations.
+                  Upload and organize your photos with custom categories and
+                  beautiful animations.
                 </p>
               </motion.div>
 
@@ -136,7 +143,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">Video Collection</h3>
                 <p className="text-muted-foreground">
-                  Store your short videos (up to 30 seconds) alongside your photos.
+                  Store your short videos (up to 30 seconds) alongside your
+                  photos.
                 </p>
               </motion.div>
 
@@ -151,7 +159,10 @@ export default function LandingPage() {
                   <BookOpenIcon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Memory Journal</h3>
-                <p className="text-muted-foreground">Add notes and stories to your media to capture the full memory.</p>
+                <p className="text-muted-foreground">
+                  Add notes and stories to your media to capture the full
+                  memory.
+                </p>
               </motion.div>
             </div>
           </div>
@@ -160,9 +171,11 @@ export default function LandingPage() {
 
       <footer className="border-t py-8 px-4">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>© {new Date().getFullYear()} Summer Memories. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Summer Memories. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
-  )
+  );
 }
