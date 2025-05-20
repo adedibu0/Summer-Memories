@@ -4,7 +4,7 @@ import { analyzeMediaWithGemini, bufferToBase64 } from "@/lib/geminiVision";
 import { createUserContent } from "@google/genai";
 import * as fs from "node:fs";
 import * as path from "node:path";
-
+import { icons } from "lucide-react";
 export async function POST(request: NextRequest) {
   try {
     const { mediaId, suggestionType, userId } = await request.json();
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Retrieve media item details
-    const mediaItems = getMediaItems(userId);
+    const mediaItems = await getMediaItems(userId);
     const mediaItem = mediaItems.find((item) => item.id === mediaId);
 
     if (!mediaItem) {

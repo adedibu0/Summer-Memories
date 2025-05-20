@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 import { getUserByEmail } from "@/lib/user";
+import { createUser } from "@/lib/user";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -49,10 +50,56 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
+    async signIn({ account, profile }) {
+      if (account?.provider === "google") {
+        try {
+          // Ensure user exists in your database (find or create)
+          let user: any = await getUserByEmail(profile?.email as string);
+
+          if (!user) {
+            // If user doesn't exist, create a new one
+            user = await createUser({
+              name: profile?.name as string,
+              email: profile?.email as string,
+              isGoogleSignup: true,
+            });
+          }
+          return user;
+        } catch (error) {
+          console.error("Error in Google sign-in callback:", error);
+          return false; // Prevent sign in on error
+        }
       }
+      // For other providers (e.g., credentials), the authorize function
+      // already returns the database user object, so we can just return true
+      // here to indicate successful authentication.
+      return true;
+    },
+    async jwt({ token, user, account, profile }) {
+      if (user) {
+        // Ensure user.email is a string before fetching from the database
+        if (typeof user.email === "string") {
+          // Fetch the user from your database to get the MongoDB _id
+          const databaseUser = await getUserByEmail(user.email);
+
+          if (databaseUser) {
+            token.id = databaseUser._id.toString(); // Use the MongoDB _id
+          } else {
+            console.error(
+              "Database user not found in jwt callback for email:",
+              user.email
+            );
+            // Optionally, handle this case - maybe return false from signIn or redirect
+          }
+        } else {
+          console.error(
+            "User email is not a string in jwt callback:",
+            user.email
+          );
+          // Handle the case where email is not a string if necessary
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

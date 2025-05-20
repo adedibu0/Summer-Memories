@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
-    const categories = getCategories(userId);
+    const categories = await getCategories(userId);
     return NextResponse.json(categories);
   } catch (e) {
     return NextResponse.json(

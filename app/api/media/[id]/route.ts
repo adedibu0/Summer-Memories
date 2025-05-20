@@ -19,7 +19,7 @@ export async function PATCH(
 
     const updates = await request.json();
 
-    const updatedItem = updateMediaItem(userId, mediaId, updates);
+    const updatedItem = await updateMediaItem(userId, mediaId, updates);
 
     return NextResponse.json(updatedItem);
   } catch (error) {
@@ -48,7 +48,7 @@ export async function DELETE(
 
     const mediaId = params.id;
 
-    deleteMediaItem(userId, mediaId);
+    await deleteMediaItem(userId, mediaId);
 
     return NextResponse.json({ message: "Media item deleted successfully" });
   } catch (error) {

@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const mediaItems = getMediaItems(userId);
+    const mediaItems = await getMediaItems(userId);
 
     const imageItemsWithHash = mediaItems.filter(
       (item) => item.type === "image" && item.phash

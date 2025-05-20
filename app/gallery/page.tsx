@@ -13,7 +13,7 @@ export default async function GalleryPage() {
     redirect("/login");
   } else {
     const { id } = session?.user;
-    const categories = getCategories(id);
+    const categories = await getCategories(id);
     if (categories.length === 0) {
       initializeDefaultCategoriesForUser(id);
     }

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch categories using the server-side function
-    const userCategories = getCategories(userId);
+    const userCategories = await getCategories(userId);
     const categoryNames = userCategories.map((cat) => cat.name); // Extract category names
 
     // Read file as buffer
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       try {
         phash = await getImagePhash(buffer);
         // Check for duplicates
-        const existing = getMediaItems(userId).filter(
+        const existing = (await getMediaItems(userId)).filter(
           (item) => item.type === "image" && item.phash
         );
         const threshold = 10; // Hamming distance threshold for near-duplicate

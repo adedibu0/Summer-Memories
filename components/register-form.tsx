@@ -28,7 +28,7 @@ import { SunIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
-
+import { FaGoogle } from "react-icons/fa";
 const registerSchema = z
   .object({
     name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -198,6 +198,7 @@ export default function RegisterForm() {
           className="w-full"
           onClick={() => signIn("google", { callbackUrl: "/gallery" })}
         >
+          <FaGoogle />
           Google
         </Button>
       </CardContent>
