@@ -237,9 +237,10 @@ export const deleteMediaItem = async (
   mediaId: string
 ): Promise<void> => {
   await connectToDatabase(); // Ensure DB connection
+  console.log(`mediaId ${mediaId} delete with userId ${userId}`);
   const deletedItem = await MediaItemModel.findOneAndDelete({
     userId,
-    id: mediaId,
+    _id: mediaId,
   });
 
   if (!deletedItem) {
@@ -251,8 +252,6 @@ export const deleteMediaItem = async (
     // Extract the public_id from the deleted item's url or id field
     const publicId = deletedItem.id; // Assuming id is the Cloudinary public_id
     if (publicId) {
-      // Determine resource type (image/video) from mimeType or type field if available
-      // For simplicity, assuming 'image' for now, you might need to adjust this
       const resourceType = deletedItem.type === "video" ? "video" : "image";
       await cloudinary.uploader.destroy(publicId, {
         resource_type: resourceType,

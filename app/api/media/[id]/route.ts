@@ -35,6 +35,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { id: mediaId } = await params;
+  console.log("Id in route: ", mediaId);
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
@@ -45,8 +47,6 @@ export async function DELETE(
         { status: 400 }
       );
     }
-
-    const mediaId = params.id;
 
     await deleteMediaItem(userId, mediaId);
 

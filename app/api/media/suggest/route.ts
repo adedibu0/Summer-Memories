@@ -96,8 +96,15 @@ export async function POST(request: NextRequest) {
     if (suggestionType === "special-day") {
       const createdAtDate = new Date(mediaItem.createdAt);
       const formattedDate = createdAtDate.toLocaleDateString();
+      const descClause = mediaItem.description
+        ? ` and its description ("${mediaItem.description}")`
+        : "";
 
-      const promptText = `Examine the content of this ${mediaItem.type} created on ${formattedDate}. Does it appear to capture a special day, holiday, or celebration? If so, describe what kind of event it might be. If not, state that it doesn't seem to be related to a special day.`;
+      const promptText = `Review this ${mediaItem.type}${descClause} from ${formattedDate}:
+    
+    1. If it shows a celebration (birthday, anniversary, festival, holiday), identify the event and mention ${formattedDate}.
+    2. Otherwise, if it captures a pleasant outing or personal moment, briefly describe it and note ${formattedDate}.
+    3. If neither applies, state that this item from ${formattedDate} doesn’t depict any special event or notable moment.`;
 
       const contents = createUserContent([
         mediaInputPart,
@@ -134,11 +141,14 @@ export async function POST(request: NextRequest) {
     if (suggestionType === "mood" || suggestionType === "poetic") {
       let promptText = "";
       if (suggestionType === "mood") {
-        promptText = `Analyze the mood in this ${mediaItem.type} and summarize it in one short sentence.`;
+        promptText = mediaItem.description
+          ? `Analyze the mood in this ${mediaItem.type}with this description: ${mediaItem.description} and summarize it in one short sentence.`
+          : `Analyze the mood in this ${mediaItem.type} and summarize it in one short sentence.`;
       } else if (suggestionType === "poetic") {
-        promptText = `Generate a short poetic caption for this ${mediaItem.type}.`;
+        promptText = mediaItem.description
+          ? `Generate a short poetic caption for this ${mediaItem.type} with this description: ${mediaItem.description}.`
+          : `Generate a short poetic caption for this ${mediaItem.type}.`;
       }
-
       const contents = createUserContent([
         mediaInputPart,
         { text: promptText },
