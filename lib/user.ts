@@ -26,12 +26,6 @@ export type User = {
   password: string;
 };
 
-export const getUsers = (): User[] => {
-  ensureDataDir();
-  const usersData = fs.readFileSync(usersFilePath, "utf-8");
-  return JSON.parse(usersData);
-};
-
 export const getUserByEmail = async (email: string) => {
   await connectToDatabase();
   return User.findOne({ email });
@@ -75,7 +69,7 @@ export const createUser = async ({
 
   // Initialize default categories for this user (assuming it works with the new user ID)
   // You might need to adjust initializeDefaultCategoriesForUser if it expects a different user ID format
-  initializeDefaultCategoriesForUser(newUser._id.toString());
+  await initializeDefaultCategoriesForUser(newUser._id.toString());
 
   return newUser;
 };

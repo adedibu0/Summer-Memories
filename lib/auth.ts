@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 import { getUserByEmail } from "@/lib/user";
 import { createUser } from "@/lib/user";
+import { initializeDefaultCategoriesForUser } from "./category";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -63,6 +64,7 @@ export const authOptions: NextAuthOptions = {
               email: profile?.email as string,
               isGoogleSignup: true,
             });
+            await initializeDefaultCategoriesForUser(user._id.toString());
           }
           return user;
         } catch (error) {
@@ -81,7 +83,6 @@ export const authOptions: NextAuthOptions = {
         if (typeof user.email === "string") {
           // Fetch the user from your database to get the MongoDB _id
           const databaseUser = await getUserByEmail(user.email);
-
           if (databaseUser) {
             token.id = databaseUser._id.toString(); // Use the MongoDB _id
           } else {

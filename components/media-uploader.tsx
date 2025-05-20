@@ -63,7 +63,6 @@ export default function MediaUploader({
     setIsLoadingCategories(true);
     try {
       const data: Category[] = await fetchCategories(userId);
-      console.log("data: ", data);
       setCategories(data);
     } catch (e) {
       toast({

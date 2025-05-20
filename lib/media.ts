@@ -57,10 +57,6 @@ export interface SuggestedGroup {
   items: string[];
 }
 
-// Ensure the media directory exists
-// This function is no longer needed as files will be stored in Cloudinary
-// and metadata in MongoDB.
-
 export interface MediaItem extends Document {
   _id: mongoose.Types.ObjectId;
   id: string;
@@ -78,20 +74,31 @@ export interface MediaItem extends Document {
 }
 
 // Mongoose Schema for MediaItem
-const MediaItemSchema = new Schema<MediaItem>({
-  id: { type: String, required: true, unique: true },
-  userId: { type: String, required: true },
-  filename: { type: String, required: true },
-  type: { type: String, required: true },
-  mimeType: { type: String, required: true },
-  categories: { type: [Schema.Types.Mixed], required: true }, // Use Mixed for flexible types
-  description: { type: String, required: true },
-  createdAt: { type: String, required: true },
-  journal: { type: String },
-  phash: { type: String },
-  gpsData: { type: { latitude: Number, longitude: Number } },
-  url: { type: String, required: true },
-});
+const MediaItemSchema = new Schema<MediaItem>(
+  {
+    id: { type: String, required: true, unique: true },
+    userId: { type: String, required: true },
+    filename: { type: String, required: true },
+    type: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    categories: { type: [Schema.Types.Mixed], required: true }, // Use Mixed for flexible types
+    description: { type: String, required: true },
+    createdAt: { type: String, required: true },
+    journal: { type: String },
+    phash: { type: String },
+    gpsData: { type: { latitude: Number, longitude: Number } },
+    url: { type: String, required: true },
+  },
+  {
+    toJSON: {
+      transform(doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.__v;
+      },
+    },
+  }
+);
 
 // Mongoose Model for MediaItem
 const MediaItemModel =
@@ -213,7 +220,7 @@ export const updateMediaItem = async (
 ): Promise<MediaItem> => {
   await connectToDatabase(); // Ensure DB connection
   const updatedItem = await MediaItemModel.findOneAndUpdate(
-    { userId, id: mediaId },
+    { userId, _id: mediaId },
     updates,
     { new: true }
   );
@@ -266,7 +273,6 @@ export const getMediaItemsByCategory = async (
 
   if (category === "all") {
     const items = await MediaItemModel.find({ userId }).lean();
-    console.log(" itesms: ", items);
     return items.map((item: any) => ({
       id: item._id.toString(),
       userId: item.userId,

@@ -65,7 +65,6 @@ export default function GalleryLayout({ userId }: GalleryLayoutProps) {
         throw new Error("Failed to fetch media items");
       }
       const data = await response.json();
-      console.log("Data in gallery layout: ", data);
       // Sort by newest first (assuming createdAt or date field)
       const sorted = [...data].sort(
         (a, b) =>
