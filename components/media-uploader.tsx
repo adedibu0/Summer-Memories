@@ -168,6 +168,21 @@ export default function MediaUploader({
 
       const result = await response.json();
 
+      // Check for duplicate flag first
+      if (result.isDuplicate) {
+        toast({
+          title: "Duplicate Detected",
+          description: result.message || "A similar image already exists.",
+          variant: "default", // Or a different variant if you have one for warnings
+        });
+        // Reset state to allow selecting a new file
+        setCurrentStep("select_file");
+        setSelectedFiles([]);
+        setAiSuggestions(null);
+        setUploadProgress(0);
+        return; // Stop further processing
+      }
+
       if (result.suggestions) {
         setAiSuggestions(result.suggestions);
         setDescription(result.suggestions.description);

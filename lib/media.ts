@@ -398,3 +398,5 @@ export const suggestGroups = async (
     return [];
   }
 };
+
+export { connectToDatabase, MediaItemModel };
